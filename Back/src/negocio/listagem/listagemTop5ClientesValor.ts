@@ -17,7 +17,7 @@ export default class ListagemTop5ClientesValor extends Listagem {
 
         const clientesComValor = this.clientes.map(cliente => {
             const valorProdutos = cliente.getProdutosConsumidos.reduce((total: number, produto: Produto) => total + produto.valor, 0)
-            const valorServicos = cliente.getServicosConsumidos.reduce((total: number, servico: Servico) => total + servico.valor, 0)
+            const valorServicos = cliente.getServicosConsumidos.reduce((total: number, servico: Servico) => total + servico.preco, 0)
             const valorTotal = valorProdutos + valorServicos
 
             return {
