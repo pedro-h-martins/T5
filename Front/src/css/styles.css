@@ -1,0 +1,20 @@
+.transition {
+    transition: all 0.2s ease-in-out;
+}
+
+.transition:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 768px) {
+    [data-label] {
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        gap: 10px;
+    }
+
+    [data-label]:before {
+        content: attr(data-label);
+        font-weight: 600;
+    }
+}
