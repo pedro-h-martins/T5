@@ -56,3 +56,6 @@ npm start       # Inicia o servidor de desenvolvimento
 - Controle de produtos e serviços
 - Registro de consumo
 - Listagens e relatórios
+  
+### Portas
+O Back-End está rodando na porta 3001 e o Front-end na porta 3000.
