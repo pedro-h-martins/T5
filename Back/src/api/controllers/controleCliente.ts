@@ -3,11 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 import Cliente from '../../modelo/cliente';
 import CPF from '../../modelo/cpf';
 import Pet from '../../modelo/pet';
-import Empresa from '../../modelo/empresa';
 import Produto from '../../modelo/produto';
 import Servico from '../../modelo/servico';
-
-const empresa = new Empresa();
+import { empresa } from '../server';
 
 export class ControleCliente {
     
@@ -19,6 +17,24 @@ export class ControleCliente {
                 nomeSocial: cliente.nomeSocial,
                 cpf: cliente.getCpf.getValor,
                 dataCadastro: cliente.getDataCadastro,
+                telefones: cliente.getTelefones.map((telefone) => ({
+                    ddd: telefone.getDdd,
+                    numero: telefone.getNumero
+                })),
+                rgs: cliente.getRgs.map((rg) => ({
+                    valor: rg.getValor,
+                    dataEmissao: rg.getDataEmissao
+                })),
+                produtosConsumidos: cliente.getProdutosConsumidos.map((produto) => ({
+                    id: produto.getId,
+                    nome: produto.nome,
+                    valor: produto.valor
+                })),
+                servicosConsumidos: cliente.getServicosConsumidos.map((servico) => ({
+                    id: servico.getId,
+                    nome: servico.nome,
+                    preco: servico.preco
+                })),
                 pets: cliente.getPets.map((pet: Pet) => ({
                     nome: pet.getNome,
                     tipo: pet.getTipo,
@@ -46,6 +62,24 @@ export class ControleCliente {
                 nomeSocial: cliente.nomeSocial,
                 cpf: cliente.getCpf.getValor,
                 dataCadastro: cliente.getDataCadastro,
+                telefones: cliente.getTelefones.map((telefone) => ({
+                    ddd: telefone.getDdd,
+                    numero: telefone.getNumero
+                })),
+                rgs: cliente.getRgs.map((rg) => ({
+                    valor: rg.getValor,
+                    dataEmissao: rg.getDataEmissao
+                })),
+                produtosConsumidos: cliente.getProdutosConsumidos.map((produto) => ({
+                    id: produto.getId,
+                    nome: produto.nome,
+                    valor: produto.valor
+                })),
+                servicosConsumidos: cliente.getServicosConsumidos.map((servico) => ({
+                    id: servico.getId,
+                    nome: servico.nome,
+                    preco: servico.preco
+                })),
                 pets: cliente.getPets.map((pet: Pet) => ({
                     nome: pet.getNome,
                     tipo: pet.getTipo,
@@ -261,6 +295,36 @@ export class ControleCliente {
             });
         } catch (error) {
             res.status(500).json({ message: 'Erro ao adicionar serviço ao cliente', error });
+        }
+    };
+
+    public addTelefoneToCliente = (req: Request, res: Response) => {
+        try {
+            const cpfValor = req.params.cpf;
+            const { ddd, numero } = req.body;
+            
+            if (!ddd || !numero) {
+                return res.status(400).json({ message: 'DDD e número são obrigatórios' });
+            }
+            
+            const cliente = empresa.getClientes.find((c: Cliente) => c.getCpf.getValor === cpfValor);
+            if (!cliente) {
+                return res.status(404).json({ message: 'Cliente não encontrado' });
+            }
+            
+            const Telefone = require('../../modelo/telefone').default;
+            const novoTelefone = new Telefone(ddd, numero);
+            cliente.getTelefones.push(novoTelefone);
+            
+            res.status(201).json({
+                message: 'Telefone adicionado ao cliente com sucesso',
+                telefone: {
+                    ddd: novoTelefone.getDdd,
+                    numero: novoTelefone.getNumero
+                }
+            });
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao adicionar telefone ao cliente', error });
         }
     };
 

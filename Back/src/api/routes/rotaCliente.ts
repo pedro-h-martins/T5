@@ -26,4 +26,6 @@ router.get('/:cpf/servicos', controleCliente.getClienteServicos);
 
 router.post('/:cpf/servicos/:id', controleCliente.addServicoToCliente);
 
+router.post('/:cpf/telefones', controleCliente.addTelefoneToCliente);
+
 export { router as rotasCliente };

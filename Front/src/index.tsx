@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import './css/styles.css';
+import './css/responsive.css';
 import reportWebVitals from './reportWebVitals';
 import Roteador from './componentes/roteador';
 

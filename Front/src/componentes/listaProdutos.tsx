@@ -1,5 +1,7 @@
 import { Component } from "react";
 import "../css/styles.css";
+import api from "../services/api";
+import Notificacao from "./notificacao";
 
 type props = {
     tema: string
@@ -8,9 +10,18 @@ type props = {
 type state = {
     selectedProduct: number | null;
     productData: Array<{
+        id?: string;
         nome: string;
         valor: number;
     }>;
+    topProducts: Array<{
+        nome: string;
+        quantidade: number;
+        percentual?: number;
+    }>;
+    loading: boolean;
+    loadingTop: boolean;
+    error: string | null;
 }
 
 export default class ListaProduto extends Component<props, state> {
@@ -18,34 +29,126 @@ export default class ListaProduto extends Component<props, state> {
         super(props);
         this.state = {
             selectedProduct: null,
-            productData: [
-                { nome: 'Ração Premium', valor: 29.99 },
-                { nome: 'Antipulgas', valor: 39.99 },
-                { nome: 'Brinquedo Mastigável', valor: 19.99 },
-                { nome: 'Shampoo Pet', valor: 49.99 }
-            ]
+            productData: [],
+            topProducts: [],
+            loading: true,
+            loadingTop: true,
+            error: null
         };
-    } handleProductClick = (index: number) => {
+    }
+
+    componentDidMount() {
+        this.carregarProdutos();
+        this.carregarProdutosTopConsumidos();
+    }
+
+    carregarProdutos = async () => {
+        this.setState({ loading: true, error: null });
+        try {
+            const produtos = await api.produto.getAllProdutos();
+            this.setState({ 
+                productData: produtos, 
+                loading: false 
+            });
+        } catch (error) {
+            console.error("Erro ao carregar produtos:", error);
+            this.setState({ 
+                error: "Erro ao carregar a lista de produtos", 
+                loading: false 
+            });
+        }
+    }
+
+    carregarProdutosTopConsumidos = async () => {
+        this.setState({ loadingTop: true, error: null });
+        try {
+            const topProdutos = await api.relatorios.getTopProdutos();
+            this.setState({ 
+                topProducts: topProdutos,
+                loadingTop: false
+            });
+        } catch (error) {
+            console.error("Erro ao carregar produtos mais consumidos:", error);
+            this.setState({ 
+                error: "Erro ao carregar a lista de produtos mais consumidos",
+                loadingTop: false
+            });
+        }
+    }
+
+    handleProductClick = (index: number) => {
         this.setState({ selectedProduct: this.state.selectedProduct === index ? null : index });
     }
 
-    handleSave = (index: number) => {
+    handleSave = async (index: number) => {
+        try {
+            const produto = this.state.productData[index];
+            
+            if (produto.id) {
+                await api.produto.updateProduto(produto.id, {
+                    nome: produto.nome,
+                    valor: produto.valor
+                });
+                await this.carregarProdutos();
+                await this.carregarProdutosTopConsumidos();
+            }
+            this.setState({ selectedProduct: null });
+        } catch (error) {
+            console.error("Erro ao salvar produto:", error);
+            this.setState({ error: "Erro ao salvar produto" });
+        }
+    }
+
+    handleDelete = async (index: number) => {
+        try {
+            const produto = this.state.productData[index];
+            if (produto.id) {
+                await api.produto.deleteProduto(produto.id);
+                await this.carregarProdutos();
+                await this.carregarProdutosTopConsumidos();
+            }
+        } catch (error) {
+            console.error("Erro ao excluir produto:", error);
+            this.setState({ error: "Erro ao excluir produto" });
+        }
+    }
+
+    limparNotificacoes = () => {
         this.setState({
-            selectedProduct: null
+            error: null
         });
     }
 
-    handleDelete = (index: number) => {
-        const updatedProducts = this.state.productData.filter((_, i) => i !== index);
-        this.setState({
-            productData: updatedProducts,
-            selectedProduct: null
-        });
+    handleValorChange = (index: number, valor: number) => {
+        const productData = [...this.state.productData];
+        productData[index] = { ...productData[index], valor };
+        this.setState({ productData });
     }
 
     render() {
+        const { error, loading, loadingTop } = this.state;
+
+        if (loading) {
+            return (
+                <div className="text-center py-3">
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Carregando...</span>
+                    </div>
+                    <p className="mt-2">Carregando produtos...</p>
+                </div>
+            );
+        }
+
         return (
-            <div className="container-fluid px-lg-5 py-4">
+            <div>
+                {error && (
+                    <Notificacao 
+                        mensagem={error} 
+                        tipo="error"
+                        onClose={this.limparNotificacoes}
+                    />
+                )}
+                <div className="container-fluid px-lg-5 py-4">
                 <div className="row">
                     <div className="col-lg-8 mb-5">
                         <div className="card shadow-sm border-0">
@@ -76,7 +179,7 @@ export default class ListaProduto extends Component<props, state> {
 
                                             {this.state.selectedProduct === index && (
                                                 <div className="mt-3 border-top pt-3 animate__animated animate__fadeIn">
-                                                    <form className="mb-3">
+                                                    <form className={`mb-3 product-${index}`}>
                                                         <div className="mb-3">
                                                             <label className="form-label text-muted small fw-bold">Valor do Produto</label>
                                                             <div className="input-group">
@@ -84,7 +187,8 @@ export default class ListaProduto extends Component<props, state> {
                                                                 <input type="number"
                                                                     className="form-control form-control-sm"
                                                                     step="0.01"
-                                                                    defaultValue={produto.valor} />
+                                                                    value={produto.valor}
+                                                                    onChange={(e) => this.handleValorChange(index, parseFloat(e.target.value) || 0)} />
                                                             </div>
                                                         </div>
                                                         <div className="d-flex gap-2">
@@ -117,25 +221,41 @@ export default class ListaProduto extends Component<props, state> {
                                 </h4>
                             </div>
                             <div className="card-body">
-                                <div className="list-group">
-                                    {['Antipulgas', 'Shampoo Pet', 'Brinquedo Mastigável'].map((produto, index) => (
-                                        <div key={index} className="list-group-item list-group-item-action border-0 border-bottom transition">
-                                            <div className="d-flex w-100 justify-content-between align-items-center">
-                                                <div className="d-flex align-items-center">
-                                                    <span className="badge rounded-pill bg-primary me-3">{index + 1}</span>
-                                                    <h6 className="mb-0">{produto}</h6>
-                                                </div>
-                                                <small className="text-muted">
-                                                    <i className="bi bi-star-fill text-warning me-1"></i>
-                                                    {['92%', '84%', '71%'][index]}
-                                                </small>
-                                            </div>
+                                {this.state.loadingTop ? (
+                                    <div className="text-center py-3">
+                                        <div className="spinner-border text-primary" role="status">
+                                            <span className="visually-hidden">Carregando...</span>
                                         </div>
-                                    ))}
-                                </div>
+                                        <p className="mt-2">Carregando produtos mais consumidos...</p>
+                                    </div>
+                                ) : (
+                                    <div className="list-group">
+                                        {this.state.topProducts.length > 0 ? (
+                                            this.state.topProducts.map((produto, index) => (
+                                                <div key={index} className="list-group-item list-group-item-action border-0 border-bottom transition">
+                                                    <div className="d-flex w-100 justify-content-between align-items-center">
+                                                        <div className="d-flex align-items-center">
+                                                            <span className="badge rounded-pill bg-primary me-3">{index + 1}</span>
+                                                            <h6 className="mb-0">{produto.nome}</h6>
+                                                        </div>
+                                                        <small className="text-muted">
+                                                            <i className="bi bi-star-fill text-warning me-1"></i>
+                                                            {produto.quantidade} {produto.percentual ? `(${produto.percentual}%)` : ''}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-3">
+                                                <p>Nenhum produto consumido ainda</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
         );

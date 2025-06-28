@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
 import Produto from '../../modelo/produto';
-import Empresa from '../../modelo/empresa';
-
-const empresa = new Empresa();
+import { empresa } from '../server';
 
 export class ControleProduto {
     

@@ -1,10 +1,8 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import Pet from '../../modelo/pet';
-import Empresa from '../../modelo/empresa';
 import Cliente from '../../modelo/cliente';
-
-const empresa = new Empresa();
+import { empresa } from '../server';
 
 export class ControlePet {
     

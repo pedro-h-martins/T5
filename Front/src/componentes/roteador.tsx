@@ -15,16 +15,19 @@ import ListaTopClientes from "./listaTopClientes";
 import BotaoTopClientes from "./botaoTopClientes";
 
 type state = {
-    tela: string
+    tela: string,
+    clienteSelecionadoCpf: string | null
 }
 
 export default class Roteador extends Component<{}, state> {
     constructor(props: {} | Readonly<{}>) {
         super(props)
         this.state = {
-            tela: 'Clientes'
+            tela: 'Clientes',
+            clienteSelecionadoCpf: null
         }
         this.selecionarView = this.selecionarView.bind(this)
+        this.selecionarCliente = this.selecionarCliente.bind(this)
     }
 
     selecionarView(novaTela: string, evento: Event) {
@@ -35,13 +38,23 @@ export default class Roteador extends Component<{}, state> {
         })
     }
 
+    selecionarCliente(cpf: string) {
+        this.setState({
+            clienteSelecionadoCpf: cpf
+        })
+    }
+
     render() {
         let barraNavegacao = <BarraNavegacao seletorView={this.selecionarView} tema="#e3f2fd" botoes={['Clientes', 'Produtos', 'Serviços', 'Cadastros']} />
         if (this.state.tela === 'Clientes') {
             return (
                 <>
                     {barraNavegacao}
-                    <ListaCliente tema="#e3f2fd" seletorView={this.selecionarView} />
+                    <ListaCliente 
+                        tema="#e3f2fd" 
+                        seletorView={this.selecionarView}
+                        seletorCliente={this.selecionarCliente} 
+                    />
                 </>
             )
         } else if (this.state.tela === 'Editar Pet') {
@@ -59,10 +72,33 @@ export default class Roteador extends Component<{}, state> {
                 </>
             )
         } else if (this.state.tela === 'Pagamento do Cliente') {
+            if (!this.state.clienteSelecionadoCpf) {
+                return (
+                    <>
+                        {barraNavegacao}
+                        <div className="container mt-4 text-center">
+                            <div className="alert alert-warning">
+                                <h4>Nenhum cliente selecionado</h4>
+                                <p>Por favor, selecione um cliente para visualizar seus pagamentos.</p>
+                            </div>
+                            <button 
+                                className="btn btn-primary mt-2" 
+                                onClick={(e) => this.selecionarView('Clientes', e as unknown as Event)}
+                            >
+                                Voltar para Lista de Clientes
+                            </button>
+                        </div>
+                    </>
+                )
+            }
+            
             return (
                 <>
                     {barraNavegacao}
-                    <TabelaPagamentoCliente tema="#e3f2fd" />
+                    <TabelaPagamentoCliente 
+                        tema="#e3f2fd" 
+                        clienteCpf={this.state.clienteSelecionadoCpf} 
+                    />
                 </>
             )
         } else if (this.state.tela === 'Top Clientes') {

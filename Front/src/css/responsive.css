@@ -1,0 +1,43 @@
+@media (max-width: 768px) {
+    .list-group-item {
+        padding: 1rem 0.75rem;
+    }
+    
+    .form-control, .form-select, .input-group {
+        font-size: 0.95rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .d-md-flex .btn {
+        width: auto;
+        margin-right: 0.5rem;
+    }
+    
+    h5.mb-1 {
+        font-size: 1.1rem;
+        max-width: 80%;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+    
+    h5.mb-1 {
+        font-size: 1rem;
+    }
+    
+    .form-label {
+        font-size: 0.9rem;
+    }
+}
